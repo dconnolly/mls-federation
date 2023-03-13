@@ -11,27 +11,26 @@
        This document describes how the Messaging Layer Security (MLS) protocol can be
 used in a federated environment. 
     " name="description">
-<meta content="xml2rfc 3.12.5" name="generator">
+<meta content="xml2rfc 3.16.0" name="generator">
 <meta content="Internet-Draft" name="keyword">
 <meta content="draft-ietf-mls-federation-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.12.5
-    Python 3.9.7
+  xml2rfc 3.16.0
+    Python 3.10.10
     appdirs 1.4.4
-    ConfigArgParse 1.3
-    google-i18n-address 2.5.1
+    ConfigArgParse 1.5.3
+    google-i18n-address 2.5.2
     html5lib 1.1
     intervaltree 3.1.0
-    Jinja2 2.11.3
-    kitchen 1.2.6
-    lxml 4.6.5
-    MarkupSafe 2.0.1
-    pycountry 20.7.3
-    pyflakes 2.3.1
-    PyYAML 5.4.1
-    requests 2.26.0
-    setuptools 52.0.0
+    Jinja2 3.1.2
+    lxml 4.9.2
+    MarkupSafe 2.1.1
+    pycountry 22.3.5
+    PyYAML 6.0
+    requests 2.28.1
+    setuptools 65.6.0
     six 1.16.0
+    wcwidth 0.2.6
 -->
 <link href="draft-ietf-mls-federation.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -155,6 +154,14 @@ used in a federated environment.
   font-weight: 700;
   font-display: swap;
   src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Lora SemiBold'), local('Lora-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-semibold-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
@@ -338,7 +345,7 @@ ol, ul {
   padding: 0;
   margin: 0 0 0.5em 2em;
 }
-ol ol, ul ul, ol ul, ul ol {
+:is(ol, ul) :is(ol, ul) {
   margin-left: 1em;
 }
 li {
@@ -353,31 +360,50 @@ ul.empty, .ulEmpty {
 ul.empty li, .ulEmpty li {
   margin-top: 0.5em;
 }
-ul.compact, .ulCompact,
-ol.compact, .olCompact {
-  line-height: 100%;
+:is(ul, ol).compact, .ulCompact, .olCompact {
+  line-height: 1;
   margin: 0 0 0 2em;
 }
 
 /* definition lists */
 dl {
+  clear: left;
+  --indent: 3ch;
+  /* --indent: attr(indent ch); not supported in any browser, but we can dream */
+}
+dl.olPercent {
+  --indent: 5ch;
 }
 dl > dt {
   float: left;
-  margin-right: 1em;
+  margin-right: 2ch;
+  min-width: 8ch;
+}
+dl.dlNewline > dt {
+  float: none;
 }
 dl > dd {
   margin-bottom: .8em;
-  min-height: 1.3em;
+  margin-left: var(--indent) !important; /* stupid element overrides */
+  min-height: 2ex;
 }
-dl.compact > dd, .dlCompact > dd {
-  margin-bottom: 0em;
+dl.olPercent > dt {
+  min-width: calc(var(--indent) - 2ch);
+}
+:is(dl.compact, .dlCompact) > dd {
+  margin-bottom: 0;
+}
+:is(dl.compact, .dlCompact) > dd > :is(:first-child, .break:first-child + *) {
+  margin-top: 0;
+}
+:is(dl.compact, .dlCompact) > dd > :is(:last-child) {
+  margin-bottom: 0;
 }
 dl > dd > dl {
   margin-top: 0.5em;
-  margin-bottom: 0em;
+  margin-bottom: 0;
 }
-dd.break {
+:is(dd, span).break {
   display: none;
 }
 
@@ -385,11 +411,11 @@ dd.break {
 a, a[href].selfRef:hover {
   text-decoration: none;
 }
-a[href].selfRef {
-  color: var(--text-color);
-}
 a[href] {
   color: var(--link-color);
+}
+a[href].selfRef, .iref + a[href].internal {
+  color: var(--text-color);
 }
 a[href]:hover {
   text-decoration: underline;
@@ -397,7 +423,7 @@ a[href]:hover {
 a[href].selfRef:hover {
   background-color: var(--highlight-color);
 }
-a.xref {
+a.xref:is(.cite, .auto), :is(#status-of-memo, #copyright) a {
   white-space: nowrap;
 }
 
@@ -409,8 +435,13 @@ tt, code, pre {
 tt, code {
   /* changing the font for inline elements leads to different ascender
      and descender heights; as we want to retain baseline alignment,
-     remove leading to avoid altering the final height of lines */
+     remove leading to avoid altering the final height of lines
+     note: this fails if these blocks take an entire line,
+     a different solution would be great */
   line-height: 0;
+}
+:is(h1, h2, h3, h4, h5, h6) :is(tt, code) {
+  font-size: 84%;
 }
 pre {
   border: 1px solid var(--line-color);
@@ -436,6 +467,19 @@ figcaption, caption {
   text-align: left;
 }
 @media screen {
+  /* Auto-collapse boilerplate. */
+  :is(#status-of-memo, #copyright) p {
+    margin: -2px 0;
+    max-height: 0;
+    transition: max-height 2s ease, margin 0.5s ease 0.5s;
+    overflow: hidden;
+  }
+  :is(#status-of-memo, #copyright):hover p,
+  :is(#status-of-memo, #copyright) h2:target ~ p {
+    margin: 0.5em 0;
+    max-height: 500px;
+    overflow: auto;
+  }
   pre, svg {
     display: inline-block;
     overflow-x: auto;
@@ -451,7 +495,7 @@ figcaption, caption {
     display: block;
     width: calc(100% - 25px);
   }
-  pre + .pilcrow, svg + .pilcrow {
+  :is(pre, svg) + .pilcrow {
     display: inline-block;
     vertical-align: text-bottom;
     padding-bottom: 8px;
@@ -500,17 +544,11 @@ th, td {
 th {
   background-color: var(--line-color);
 }
-tr:nth-child(2n) > td {
+:is(tr:nth-child(2n), thead+tbody > tr:nth-child(2n+1)) > td {
   background-color: var(--background-color);
 }
-tr:nth-child(2n+1) > td {
+:is(tr:nth-child(2n+1), thead+tbody > tr:nth-child(2n)) > td {
   background-color: var(--highlight-color);
-}
-thead+tbody > tr:nth-child(2n) > td {
-  background-color: var(--highlight-color);
-}
-thead+tbody > tr:nth-child(2n+1) > td {
-  background-color: var(--background-color);
 }
 table caption {
   margin: 0;
@@ -550,10 +588,15 @@ hr {
 }
 .bcp14 {
   font-variant: small-caps;
+  font-weight: 600;
+  font-size: var(--small-font-size);
 }
-
 .role {
   font-variant: all-small-caps;
+}
+sub, sup {
+  line-height: 1;
+  font-size: 80%;
 }
 
 /* info block */
@@ -561,17 +604,18 @@ hr {
   margin: 0;
   font-size: var(--small-font-size);
   line-height: 18px;
-  --identifier-width: 8em;
+  --identifier-width: 15ch;
 }
 #identifiers dt {
   width: var(--identifier-width);
-  margin: 0;
+  min-width: var(--identifier-width);
   clear: left;
   float: left;
   text-align: right;
 }
 #identifiers dd {
-  margin: 0 0 0 calc(1em + var(--identifier-width));
+  margin: 0;
+  margin-left: calc(1em + var(--identifier-width)) !important;
   min-width: 5em;
 }
 #identifiers .authors .author {
@@ -621,8 +665,13 @@ hr {
   font-weight: bold;
   min-width: 7em;
 }
+.references dt:target::before {
+  content: "⇒";
+  width: 15px;
+  margin: 0 10px 0 -25px;
+}
 .references dd {
-  margin-left: 8em;
+  margin-left: 8em !important;
   overflow: auto;
 }
 
@@ -790,7 +839,7 @@ hr.addr {
     margin: 0 0 0 4px;
     font-size: var(--small-font-size);
   }
-  #toc ul p, #toc ul li {
+  #toc ul :is(p, li) {
     margin: 2px 0;
     line-height: 22px;
   }
@@ -889,24 +938,14 @@ a.toplink {
   margin: 8px 0.5em 0;
 }
 
-/* Fix the dl styling to match the RFC 7992 attributes */
-dl > dt,
-dl.dlParallel > dt {
-  float: left;
-  margin-right: 1em;
-}
-dl.dlNewline > dt {
-  float: none;
-}
-
 /* Provide styling for table cell text alignment */
-table .text-left, table .text-left {
+table .text-left {
   text-align: left;
 }
-table .text-center, table .text-center {
+table .text-center {
   text-align: center;
 }
-table .text-right, table .text-right {
+table .text-right {
   text-align: right;
 }
 
@@ -973,12 +1012,6 @@ address div.right {
   }
 
 }
-/* Tweak the bcp14 keyword presentation */
-.bcp14 {
-  font-variant: small-caps;
-  font-weight: bold;
-  font-size: 0.9em;
-}
 
 /* Dark mode. */
 @media (prefers-color-scheme: dark) {
@@ -993,33 +1026,34 @@ address div.right {
   --pilcrow-strong: #666;
   scrollbar-color: #777 #333;
 }
-/* Trick: a prefix match works because only black and white are allowed */
-svg [stroke="black"], svg [stroke^="#000"] {
+}
+
+/* SVG Trick: a prefix match works because only black and white are allowed */
+svg :is([stroke="black"], [stroke^="#000"]) {
   stroke: var(--text-color);
 }
-svg [stroke="white"], svg [stroke^="#fff"] {
+svg :is([stroke="white"], [stroke^="#fff"]) {
   stroke: var(--background-color);
 }
-svg [fill="black"], svg [fill^="#000"], svg :not([fill]) {
+svg :is([fill="black"], [fill^="#000"], :not([fill])) {
   fill: var(--text-color);
 }
-svg [stroke="fill"], svg [fill^="#fff"] {
+svg :is([fill="white"], [fill^="#fff"]) {
   fill: var(--background-color);
-}
 }
 </style>
 
 </head>
-<body>
+<body class="xml2rfc">
 <table class="ears">
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">MLS Federation</td>
-<td class="right">May 2022</td>
+<td class="right">March 2023</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Omara &amp; Robert</td>
-<td class="center">Expires 11 November 2022</td>
+<td class="center">Expires 14 September 2023</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1032,12 +1066,12 @@ svg [stroke="fill"], svg [fill^="#fff"] {
 <dd class="internet-draft">draft-ietf-mls-federation-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2022-05-10" class="published">10 May 2022</time>
+<time datetime="2023-03-13" class="published">13 March 2023</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2022-11-11">11 November 2022</time></dd>
+<dd class="expires"><time datetime="2023-09-14">14 September 2023</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1046,6 +1080,7 @@ svg [stroke="fill"], svg [fill^="#fff"] {
 </div>
 <div class="author">
       <div class="author-name">R. Robert</div>
+<div class="org">Phoenix R&amp;D</div>
 </div>
 </dd>
 </dl>
@@ -1083,7 +1118,7 @@ used in a federated environment.<a href="#section-abstract-1" class="pilcrow">¶
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 11 November 2022.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 14 September 2023.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1092,7 +1127,7 @@ used in a federated environment.<a href="#section-abstract-1" class="pilcrow">¶
 <a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
         </h2>
 <p id="section-boilerplate.2-1">
-            Copyright (c) 2022 IETF Trust and the persons identified as the
+            Copyright (c) 2023 IETF Trust and the persons identified as the
             document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.2-2">
             This document is subject to BCP 78 and the IETF Trust's Legal
@@ -1113,73 +1148,84 @@ used in a federated environment.<a href="#section-abstract-1" class="pilcrow">¶
         </h2>
 <nav class="toc"><ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1">
-            <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="xref">1</a>.  <a href="#name-introduction" class="xref">Introduction</a></p>
+            <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="auto internal xref">1</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
-            <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="xref">2</a>.  <a href="#name-terminology" class="xref">Terminology</a></p>
+            <p id="section-toc.1-1.2.1"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-federated-environments" class="internal xref">Federated environments</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.1">
+                <p id="section-toc.1-1.2.2.1.1"><a href="#section-2.1" class="auto internal xref">2.1</a>.  <a href="#name-delivery-services" class="internal xref">Delivery Services</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.1.2.1">
+                    <p id="section-toc.1-1.2.2.1.2.1.1" class="keepWithNext"><a href="#section-2.1.1" class="auto internal xref">2.1.1</a>.  <a href="#name-different-client-applicatio" class="internal xref">Different client applications</a></p>
 </li>
-          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
-            <p id="section-toc.1-1.3.1"><a href="#section-3" class="xref">3</a>.  <a href="#name-federated-environments" class="xref">Federated environments</a></p>
-<ul class="compact toc ulBare ulEmpty">
-<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1">
-                <p id="section-toc.1-1.3.2.1.1"><a href="#section-3.1" class="xref">3.1</a>.  <a href="#name-delivery-services" class="xref">Delivery Services</a></p>
-<ul class="compact toc ulBare ulEmpty">
-<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1.2.1">
-                    <p id="section-toc.1-1.3.2.1.2.1.1" class="keepWithNext"><a href="#section-3.1.1" class="xref">3.1.1</a>.  <a href="#name-key-packages" class="xref">Key packages</a></p>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.1.2.2">
+                    <p id="section-toc.1-1.2.2.1.2.2.1" class="keepWithNext"><a href="#section-2.1.2" class="auto internal xref">2.1.2</a>.  <a href="#name-different-delivery-services" class="internal xref">Different Delivery Services</a></p>
 </li>
                 </ul>
 </li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.2">
-                <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="xref">3.2</a>.  <a href="#name-authentication-service" class="xref">Authentication Service</a></p>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.2">
+                <p id="section-toc.1-1.2.2.2.1"><a href="#section-2.2" class="auto internal xref">2.2</a>.  <a href="#name-authentication-service" class="internal xref">Authentication Service</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-further-considerations" class="internal xref">Further considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1">
+                <p id="section-toc.1-1.3.2.1.1"><a href="#section-3.1" class="auto internal xref">3.1</a>.  <a href="#name-network-protocol-between-di" class="internal xref">Network protocol between different domains</a></p>
 </li>
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
-            <p id="section-toc.1-1.4.1"><a href="#section-4" class="xref">4</a>.  <a href="#name-further-considerations" class="xref">Further considerations</a></p>
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-discovery-service-for-clien" class="internal xref">Discovery service for clients/users on a specific domain</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
-            <p id="section-toc.1-1.5.1"><a href="#section-5" class="xref">5</a>.  <a href="#name-use-cases" class="xref">Use cases</a></p>
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-use-cases" class="internal xref">Use cases</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1">
-                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="xref">5.1</a>.  <a href="#name-different-delivery-servers" class="xref">Different Delivery Servers</a></p>
+                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-different-delivery-servers" class="internal xref">Different Delivery Servers</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2">
-                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="xref">5.2</a>.  <a href="#name-different-client-applicatio" class="xref">Different client applications</a></p>
+                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="auto internal xref">5.2</a>.  <a href="#name-different-client-application" class="internal xref">Different client applications</a></p>
 </li>
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
-            <p id="section-toc.1-1.6.1"><a href="#section-6" class="xref">6</a>.  <a href="#name-functional-requirements" class="xref">Functional Requirements</a></p>
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-functional-requirements" class="internal xref">Functional Requirements</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.1">
-                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="xref">6.1</a>.  <a href="#name-delivery-service" class="xref">Delivery service</a></p>
+                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-delivery-service" class="internal xref">Delivery service</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2">
+                <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-authentication-service-2" class="internal xref">Authentication Service</a></p>
 </li>
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
-            <p id="section-toc.1-1.7.1"><a href="#section-7" class="xref">7</a>.  <a href="#name-security-considerations" class="xref">Security Considerations</a></p>
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.1">
-                <p id="section-toc.1-1.7.2.1.1"><a href="#section-7.1" class="xref">7.1</a>.  <a href="#name-version-ciphersuite-negotia" class="xref">Version &amp; ciphersuite negotiation</a></p>
+                <p id="section-toc.1-1.7.2.1.1"><a href="#section-7.1" class="auto internal xref">7.1</a>.  <a href="#name-version-ciphersuite-negotia" class="internal xref">Version &amp; ciphersuite negotiation</a></p>
 </li>
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
-            <p id="section-toc.1-1.8.1"><a href="#section-8" class="xref">8</a>.  <a href="#name-iana-considerations" class="xref">IANA Considerations</a></p>
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
-            <p id="section-toc.1-1.9.1"><a href="#section-9" class="xref">9</a>.  <a href="#name-references" class="xref">References</a></p>
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-references" class="internal xref">References</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1">
-                <p id="section-toc.1-1.9.2.1.1"><a href="#section-9.1" class="xref">9.1</a>.  <a href="#name-normative-references" class="xref">Normative References</a></p>
+                <p id="section-toc.1-1.9.2.1.1"><a href="#section-9.1" class="auto internal xref">9.1</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.2">
-                <p id="section-toc.1-1.9.2.2.1"><a href="#section-9.2" class="xref">9.2</a>.  <a href="#name-informative-references" class="xref">Informative References</a></p>
+                <p id="section-toc.1-1.9.2.2.1"><a href="#section-9.2" class="auto internal xref">9.2</a>.  <a href="#name-informative-references" class="internal xref">Informative References</a></p>
 </li>
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
-            <p id="section-toc.1-1.10.1"><a href="#appendix-A" class="xref"></a><a href="#name-authors-addresses" class="xref">Authors' Addresses</a></p>
+            <p id="section-toc.1-1.10.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
 </li>
         </ul>
 </nav>
@@ -1190,72 +1236,47 @@ used in a federated environment.<a href="#section-abstract-1" class="pilcrow">¶
       <h2 id="name-introduction">
 <a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
       </h2>
-<p id="section-1-1">MLS Architecture draft <span>[<a href="#I-D.ietf-mls-architecture" class="xref">I-D.ietf-mls-architecture</a>]</span> describes the overall MLS
+<p id="section-1-1">MLS Architecture draft <span>[<a href="#I-D.ietf-mls-architecture" class="cite xref">I-D.ietf-mls-architecture</a>]</span> describes the overall MLS
 system architecture, assuming the client and servers (Delivery Service and
 Authentication Service) are operated by the same entity. This is however not a
 strict requirement, the MLS protocol does not have an inherent dependency on one
 single entity and can instead be used between multiple entities.<a href="#section-1-1" class="pilcrow">¶</a></p>
-<p id="section-1-2">This document describes the minimum changes needed to allow different MLS
-clients operated by the same or different entities to communicate with each and
-explaining the use cases where federation could be useful.<a href="#section-1-2" class="pilcrow">¶</a></p>
-</section>
-</div>
-<div id="terminology">
-<section id="section-2">
-      <h2 id="name-terminology">
-<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-terminology" class="section-name selfRef">Terminology</a>
-      </h2>
-<p id="section-2-1">The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
-"SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this
-document are to be interpreted as described in BCP 14 <span>[<a href="#RFC2119" class="xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="xref">RFC8174</a>]</span>
-when, and only when, they appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶</a></p>
-<span class="break"></span><dl class="dlParallel" id="section-2-2">
-        <dt id="section-2-2.1">Client:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-2.2">
-          <p id="section-2-2.2.1">An agent that uses the MLS protocol to establish shared cryptographic
-state with other clients.  A client is defined by the cryptographic keys it
-holds.  An application or user may use one client per device (keeping keys
-local to each device) or sync keys among a user's devices so that each user
-appears as a single client.<a href="#section-2-2.2.1" class="pilcrow">¶</a></p>
-</dd>
-        <dd class="break"></dd>
-<dt id="section-2-2.3">Key package:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-2.4">
-          <p id="section-2-2.4.1">A short-lived HPKE <span>[<a href="#I-D.irtf-cfrg-hpke" class="xref">I-D.irtf-cfrg-hpke</a>]</span> key pair used to
-introduce a new client to a group.  Initialization keys are published for each
-client (KeyPackage).<a href="#section-2-2.4.1" class="pilcrow">¶</a></p>
-</dd>
-        <dd class="break"></dd>
-<dt id="section-2-2.5">Identity Key:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-2.6">
-          <p id="section-2-2.6.1">A long-lived signing key pair used to authenticate the sender of a
-message.<a href="#section-2-2.6.1" class="pilcrow">¶</a></p>
-</dd>
-      <dd class="break"></dd>
-</dl>
-<p id="section-2-3">We use the TLS presentation language <span>[<a href="#RFC8446" class="xref">RFC8446</a>]</span> to
-describe the structure of protocol messages.<a href="#section-2-3" class="pilcrow">¶</a></p>
+<p id="section-1-2">The focus of this document is on the different components of the MLS
+architecture when used in a federated environment.<a href="#section-1-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="federated-environments">
-<section id="section-3">
+<section id="section-2">
       <h2 id="name-federated-environments">
-<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-federated-environments" class="section-name selfRef">Federated environments</a>
+<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-federated-environments" class="section-name selfRef">Federated environments</a>
       </h2>
-<p id="section-3-1">Federated environments are environments where multiple entities are operating
+<p id="section-2-1">Federated environments are environments where multiple entities are operating
 independent MLS services. In particular, the assumption is that Delivery
 Services and Authentication Services are not necessarily operated by the same
-entity.<a href="#section-3-1" class="pilcrow">¶</a></p>
-<p id="section-3-2">The focus of this document will be on the different components of the MLS
-architecture.<a href="#section-3-2" class="pilcrow">¶</a></p>
+entity.<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-2">Entities operating independent MLS services are commonly called domains. In most
+cases these domains might correspond to the Domain Name System, but it is not
+strictly required. Operating MLS services in a federated environment can
+therefore be regarded as federation between different domains.<a href="#section-2-2" class="pilcrow">¶</a></p>
+<p id="section-2-3">Federation is however not limited to the MLS services themselves. For example, a
+federated environment could also contain clients that are provided by different
+entities. Specifically, different vendors could provide different applications
+that differ in scope and functionality but are interoperable.<a href="#section-2-3" class="pilcrow">¶</a></p>
 <div id="delivery-services">
-<section id="section-3.1">
+<section id="section-2.1">
         <h3 id="name-delivery-services">
-<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-delivery-services" class="section-name selfRef">Delivery Services</a>
+<a href="#section-2.1" class="section-number selfRef">2.1. </a><a href="#name-delivery-services" class="section-name selfRef">Delivery Services</a>
         </h3>
-<p id="section-3.1-1">The below diagram shows an MLS group where all clients are operated under the
-same deliver service:<a href="#section-3.1-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-3.1-2">
+<p id="section-2.1-1">Depending on the kind of federated environment, the two following types of
+federated Delivery Services are possible:<a href="#section-2.1-1" class="pilcrow">¶</a></p>
+<div id="different-client-applications">
+<section id="section-2.1.1">
+          <h4 id="name-different-client-applicatio">
+<a href="#section-2.1.1" class="section-number selfRef">2.1.1. </a><a href="#name-different-client-applicatio" class="section-name selfRef">Different client applications</a>
+          </h4>
+<p id="section-2.1.1-1">The diagram below shows an MLS group where all clients are provided by
+potentially different vendors but operate on the same Delivery Service:<a href="#section-2.1.1-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-2.1.1-2">
 <pre>
                        +------------+
                       + Delivery     +
@@ -1274,13 +1295,18 @@ same deliver service:<a href="#section-3.1-1" class="pilcrow">¶</a></p>
 *********************************************************
 
 
-</pre><a href="#section-3.1-2" class="pilcrow">¶</a>
+</pre><a href="#section-2.1.1-2" class="pilcrow">¶</a>
 </div>
-<p id="section-3.1-3">One possible environment is to have different client implementations operated by
-the same delivery service, which will look like the diagram above, another
-environment is to have different or same clients operated By different delivery
-services:<a href="#section-3.1-3" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-3.1-4">
+</section>
+</div>
+<div id="different-delivery-services">
+<section id="section-2.1.2">
+          <h4 id="name-different-delivery-services">
+<a href="#section-2.1.2" class="section-number selfRef">2.1.2. </a><a href="#name-different-delivery-services" class="section-name selfRef">Different Delivery Services</a>
+          </h4>
+<p id="section-2.1.2-1">The diagram below shows a federated environment in which different or identical
+clients applications operate on different Delivery Services:<a href="#section-2.1.2-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-2.1.2-2">
 <pre>
            +-----------------+      +-----------------+
           + Deliver Service 1 +    + Deliver Service 2 +
@@ -1299,49 +1325,60 @@ services:<a href="#section-3.1-3" class="pilcrow">¶</a></p>
 *                                                       *
 *********************************************************
 
-</pre><a href="#section-3.1-4" class="pilcrow">¶</a>
+</pre><a href="#section-2.1.2-2" class="pilcrow">¶</a>
 </div>
-<div id="key-packages">
-<section id="section-3.1.1">
-          <h4 id="name-key-packages">
-<a href="#section-3.1.1" class="section-number selfRef">3.1.1. </a><a href="#name-key-packages" class="section-name selfRef">Key packages</a>
-          </h4>
-<p id="section-3.1.1-1">Key packages (as definded in <span>[<a href="#I-D.ietf-mls-protocol" class="xref">I-D.ietf-mls-protocol</a>]</span>) are used to add new
-clients to a group and can thus be considered a bootstraping mechanism for the
-protocol.<a href="#section-3.1.1-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
 </div>
 <div id="authentication-service">
-<section id="section-3.2">
+<section id="section-2.2">
         <h3 id="name-authentication-service">
-<a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-authentication-service" class="section-name selfRef">Authentication Service</a>
+<a href="#section-2.2" class="section-number selfRef">2.2. </a><a href="#name-authentication-service" class="section-name selfRef">Authentication Service</a>
         </h3>
-<p id="section-3.2-1">In a federated environment, authentication becomes more important. While the
+<p id="section-2.2-1">In a federated environment, authentication becomes more important. While the
 sepcifics of an Authentication Service are out-of-scope for MLS in general, it
 is important that strong authentication is accessible to all clients of a
 federated environment. As an example, a shared transparency log like
-<span>[<a href="#keytransparency" class="xref">keytransparency</a>]</span> could be used.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
+<span>[<a href="#keytransparency" class="cite xref">keytransparency</a>]</span> could be used.<a href="#section-2.2-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
 </div>
 <div id="further-considerations">
-<section id="section-4">
+<section id="section-3">
       <h2 id="name-further-considerations">
-<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-further-considerations" class="section-name selfRef">Further considerations</a>
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-further-considerations" class="section-name selfRef">Further considerations</a>
       </h2>
-<p id="section-4-1">The following aspects of federated communication are not considered in this
-document:<a href="#section-4-1" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-4-2.1">a common format used for the content application messages<a href="#section-4-2.1" class="pilcrow">¶</a>
-</li>
-        <li class="normal" id="section-4-2.2">a network protocol used between different server instances<a href="#section-4-2.2" class="pilcrow">¶</a>
-</li>
-        <li class="normal" id="section-4-2.3">a discovery service to discover clients/users on a specific domain<a href="#section-4-2.3" class="pilcrow">¶</a>
-</li>
-      </ul>
+<p id="section-3-1">The following aspects of federated communication are important for successful
+federation but are not considered in scope of the MLS charter:<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-2">## Common format for the content of application messages<a href="#section-3-2" class="pilcrow">¶</a></p>
+<p id="section-3-3">The MLS protocol does not impose any format on the content of application
+messages. Instead, application messages are considered to be an opaque sequence
+of bytes. Applications in a federated environment are expected to agree on a
+common format. The negotiation can be done at the KeyPackage level, or through
+the MLS extension mechanism.<a href="#section-3-3" class="pilcrow">¶</a></p>
+<div id="network-protocol-between-different-domains">
+<section id="section-3.1">
+        <h3 id="name-network-protocol-between-di">
+<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-network-protocol-between-di" class="section-name selfRef">Network protocol between different domains</a>
+        </h3>
+<p id="section-3.1-1">Cross-domain operations such as sending and receiving messages, fetching
+KeyPackages, and querying the Authentication Services have to be part of a
+common network protocol that is supported by all domains in a federated
+environment.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="discovery-service-for-clientsusers-on-a-specific-domain">
+<section id="section-4">
+      <h2 id="name-discovery-service-for-clien">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-discovery-service-for-clien" class="section-name selfRef">Discovery service for clients/users on a specific domain</a>
+      </h2>
+<p id="section-4-1">Searching for users and other discovery services are typically part of messaging
+systems. In the context of MLS, this functionality might overlap with the
+fetching of KeyPackages and message routing.<a href="#section-4-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="use-cases">
@@ -1360,12 +1397,12 @@ of messaging1.tld can encrypt and decrypt end-to-end encrypted messages from
 messaging2.tld.<a href="#section-5.1-1" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="different-client-applications">
+<div id="different-client-applications-1">
 <section id="section-5.2">
-        <h3 id="name-different-client-applicatio">
-<a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-different-client-applicatio" class="section-name selfRef">Different client applications</a>
+        <h3 id="name-different-client-application">
+<a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-different-client-application" class="section-name selfRef">Different client applications</a>
         </h3>
-<p id="section-5.2-1">Different client applications operated by the same server can use MLS to
+<p id="section-5.2-1">Different client applications operating on the same server can use MLS to
 exchange end-to-end encrypted handshake and application messages. For example,
 different browsers can implement the MLS protocol, and web developers write web
 applications that use the MLS implementation in the browser to encrypt and
@@ -1387,18 +1424,25 @@ multi-party conference calls.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
         <h3 id="name-delivery-service">
 <a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-delivery-service" class="section-name selfRef">Delivery service</a>
         </h3>
-<p id="section-6.1-1">In a federated environment, the different members of a group might use different
-Delivery Services. Each client SHOULD only connect to its respective Deliver
-Service, which in turn will connect to other Delivery Services to relay
-messages.<a href="#section-6.1-1" class="pilcrow">¶</a></p>
-<p id="section-6.1-2">One Delivery Service MUST be responsible for handshake message ordering at any
-given point in time, since TreeKEM requires handshake messages to have a total
-order. It MUST be clear to all clients and Delivery Services of the group which
-Delivery Service is responsible. The different Delivery Services can elect a
-dedicated Delivery Service to be responsible for ordering handshake messages for
-a certain period of time. The protocol between different delivery services is
-out of the scope of this document.<a href="#section-6.1-2" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-6.1-3">
+<p id="section-6.1-1">While there is no strict requirement regarding the network topology, there are
+practical advantages when clients only connect to their own Delivery Service
+rather than to the whole federated environment. This routing strategy can
+possibly make the design of a cross-domain network protocol easier in the
+context of access control.<a href="#section-6.1-1" class="pilcrow">¶</a></p>
+<p id="section-6.1-2">In such a topology, the client's own Delivery Service relays messages to the
+Delivery Service in charge for a specific group.<a href="#section-6.1-2" class="pilcrow">¶</a></p>
+<p id="section-6.1-3">When several Delivery Services are involved in relaying messages, it is
+important that all of them agree on which one is responsible for ordering
+handshake messages of a specific group at any given time in order to enforce the
+total ordering of handshake messages required by the MLS protocol.<a href="#section-6.1-3" class="pilcrow">¶</a></p>
+<p id="section-6.1-4">Depending on the functional requirements (such high availability and
+redundancy), the different Delivery Services can elect a dedicated Delivery
+Service to be responsible for ordering handshake messages for a certain period
+of time. The election process can be repeated when the availability of Delivery
+Services change.<a href="#section-6.1-4" class="pilcrow">¶</a></p>
+<p id="section-6.1-5">The diagram below shows a federated environment where a client connects to its
+own Delivery Service that in turn relays messages to other Delivery Services.<a href="#section-6.1-5" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-6.1-6">
 <pre>
                                +-----------------+         +---------+
                          +--&gt; + Deliver Service B + +---&gt; + Client B1 +
@@ -1415,8 +1459,36 @@ out of the scope of this document.<a href="#section-6.1-2" class="pilcrow">¶</a
                               +                   +        +---------+
                                +-----------------+
 
-</pre><a href="#section-6.1-3" class="pilcrow">¶</a>
+</pre><a href="#section-6.1-6" class="pilcrow">¶</a>
 </div>
+</section>
+</div>
+<div id="authentication-service-1">
+<section id="section-6.2">
+        <h3 id="name-authentication-service-2">
+<a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-authentication-service-2" class="section-name selfRef">Authentication Service</a>
+        </h3>
+<p id="section-6.2-1">The MLS specification only describes how the signatures on the contents of the
+leaf nodes of a given group can be verified and that clients have to support the
+signature schemes of all other clients in each group.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+<p id="section-6.2-2">The credential (and thus the binding between identity of the group member and
+its signature public key) in each (non-blank) leaf node has to be authenticated
+by the AS. This becomes relevant in a federated setting, as the AS, and thus the
+authentication process of each member in a given group might differ.<a href="#section-6.2-2" class="pilcrow">¶</a></p>
+<p id="section-6.2-3">This problem can be solved in a variety of ways, for example, by having all
+applications and/or service providers involved in a federation agree on a shared
+process, or by having clients advertise their authentication process in a
+similar way as their ciphersuite, with the requirement that all members of a
+group must support each others authentication processes.<a href="#section-6.2-3" class="pilcrow">¶</a></p>
+<p id="section-6.2-4">Depending on the design of the AS of a given client, other, federated clients
+might have to trust that client's service provider to authenticate its
+credential. Confidence in authentication provided by service providers in
+general can be strengthened by using a scheme such as <span>[<a href="#keytransparency" class="cite xref">keytransparency</a>]</span>, which
+allows both local and federated clients to assert a shared view of the
+authentication information provided by the service.<a href="#section-6.2-4" class="pilcrow">¶</a></p>
+<p id="section-6.2-5">In a federated environment, the AS should provide the same degree of
+transparency as in a non-federated environment, i.e. end-to-end authentication
+should be possible.<a href="#section-6.2-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1433,7 +1505,16 @@ out of the scope of this document.<a href="#section-6.1-2" class="pilcrow">¶</a
         </h3>
 <p id="section-7.1-1">In a federated environment, version &amp; ciphersuite negotiation is more critical,
 to avoid forcing a downgrade attack by malicious third party Delivery Services.
-The negotiation can be done at the KeyPackage level.<a href="#section-7.1-1" class="pilcrow">¶</a></p>
+This is due to the fact that the thread model is extended to include the following:<a href="#section-7.1-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-7.1-2.1">Different entities might have diverging security policies, e.g. they don't
+enforce validation of KeyPackages the same way.<a href="#section-7.1-2.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-7.1-2.2">Entities might be malicious and act as a threat actor, e.g. might generate
+fake clients controlled by them.<a href="#section-7.1-2.2" class="pilcrow">¶</a>
+</li>
+        </ul>
+<p id="section-7.1-3">The negotiation of version numbers &amp; ciphersuites can be done at the KeyPackage level.<a href="#section-7.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1456,28 +1537,8 @@ The negotiation can be done at the KeyPackage level.<a href="#section-7.1-1" cla
         </h3>
 <dl class="references">
 <dt id="I-D.ietf-mls-architecture">[I-D.ietf-mls-architecture]</dt>
-        <dd>
-<span class="refAuthor">Beurdouche, B.</span>, <span class="refAuthor">Rescorla, E.</span>, <span class="refAuthor">Omara, E.</span>, <span class="refAuthor">Inguva, S.</span>, <span class="refAuthor">Kwon, A.</span>, and <span class="refAuthor">A. Duric</span>, <span class="refTitle">"The Messaging Layer Security (MLS) Architecture"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-mls-architecture-07</span>, <time datetime="2021-10-04" class="refDate">4 October 2021</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-mls-architecture-07">https://datatracker.ietf.org/doc/html/draft-ietf-mls-architecture-07</a>&gt;</span>. </dd>
-<dd class="break"></dd>
-<dt id="I-D.ietf-mls-protocol">[I-D.ietf-mls-protocol]</dt>
-        <dd>
-<span class="refAuthor">Barnes, R.</span>, <span class="refAuthor">Beurdouche, B.</span>, <span class="refAuthor">Robert, R.</span>, <span class="refAuthor">Millican, J.</span>, <span class="refAuthor">Omara, E.</span>, and <span class="refAuthor">K. Cohn-Gordon</span>, <span class="refTitle">"The Messaging Layer Security (MLS) Protocol"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-mls-protocol-14</span>, <time datetime="2022-05-03" class="refDate">3 May 2022</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-mls-protocol-14">https://datatracker.ietf.org/doc/html/draft-ietf-mls-protocol-14</a>&gt;</span>. </dd>
-<dd class="break"></dd>
-<dt id="I-D.irtf-cfrg-hpke">[I-D.irtf-cfrg-hpke]</dt>
-        <dd>
-<span class="refAuthor">Barnes, R. L.</span>, <span class="refAuthor">Bhargavan, K.</span>, <span class="refAuthor">Lipp, B.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"Hybrid Public Key Encryption"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-irtf-cfrg-hpke-12</span>, <time datetime="2021-09-02" class="refDate">2 September 2021</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-hpke-12">https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-hpke-12</a>&gt;</span>. </dd>
-<dd class="break"></dd>
-<dt id="RFC2119">[RFC2119]</dt>
-        <dd>
-<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
-<dd class="break"></dd>
-<dt id="RFC8174">[RFC8174]</dt>
-        <dd>
-<span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
-<dd class="break"></dd>
-<dt id="RFC8446">[RFC8446]</dt>
       <dd>
-<span class="refAuthor">Rescorla, E.</span>, <span class="refTitle">"The Transport Layer Security (TLS) Protocol Version 1.3"</span>, <span class="seriesInfo">RFC 8446</span>, <span class="seriesInfo">DOI 10.17487/RFC8446</span>, <time datetime="2018-08" class="refDate">August 2018</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8446">https://www.rfc-editor.org/rfc/rfc8446</a>&gt;</span>. </dd>
+<span class="refAuthor">Beurdouche, B.</span>, <span class="refAuthor">Rescorla, E.</span>, <span class="refAuthor">Omara, E.</span>, <span class="refAuthor">Inguva, S.</span>, and <span class="refAuthor">A. Duric</span>, <span class="refTitle">"The Messaging Layer Security (MLS) Architecture"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-mls-architecture-10</span>, <time datetime="2022-12-16" class="refDate">16 December 2022</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-mls-architecture-10">https://datatracker.ietf.org/doc/html/draft-ietf-mls-architecture-10</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 </dl>
 </section>
@@ -1508,6 +1569,7 @@ The negotiation can be done at the KeyPackage level.<a href="#section-7.1-1" cla
 </address>
 <address class="vcard">
         <div dir="auto" class="left"><span class="fn nameRole">Raphael Robert</span></div>
+<div dir="auto" class="left"><span class="org">Phoenix R&amp;D</span></div>
 <div class="email">
 <span>Email:</span>
 <a href="mailto:ietf@raphaelrobert.com" class="email">ietf@raphaelrobert.com</a>
