@@ -5,7 +5,8 @@
 Network Working Group                                           E. Omara
 Internet-Draft                                                    Google
 Intended status: Informational                                 R. Robert
-Expires: 20 November 2022                                    19 May 2022
+Expires: 14 September 2023                                   Phoenix R&D
+                                                           13 March 2023
 
 
              The Messaging Layer Security (MLS) Federation
@@ -38,11 +39,11 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 20 November 2022.
+   This Internet-Draft will expire on 14 September 2023.
 
 Copyright Notice
 
-   Copyright (c) 2022 IETF Trust and the persons identified as the
+   Copyright (c) 2023 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -321,12 +322,12 @@ Table of Contents
 9.1.  Normative References
 
    [I-D.ietf-mls-architecture]
-              Beurdouche, B., Rescorla, E., Omara, E., Inguva, S., Kwon,
-              A., and A. Duric, "The Messaging Layer Security (MLS)
+              Beurdouche, B., Rescorla, E., Omara, E., Inguva, S., and
+              A. Duric, "The Messaging Layer Security (MLS)
               Architecture", Work in Progress, Internet-Draft, draft-
-              ietf-mls-architecture-07, 4 October 2021,
+              ietf-mls-architecture-10, 16 December 2022,
               <https://datatracker.ietf.org/doc/html/draft-ietf-mls-
-              architecture-07>.
+              architecture-10>.
 
 9.2.  Informative References
 
@@ -342,4 +343,5 @@ Authors' Addresses
 
 
    Raphael Robert
+   Phoenix R&D
    Email: ietf@raphaelrobert.com
